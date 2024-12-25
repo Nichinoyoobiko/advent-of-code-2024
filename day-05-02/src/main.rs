@@ -24,9 +24,7 @@ fn number_check(right_map: &MultiMap<i32, i32>, numbers: &Vec<i32>) -> bool {
                 .get_vec(&number)
                 .unwrap_or(&Vec::<i32>::new())
                 .into_iter()
-                .filter(|next| check == **next)
-                .count()
-                > 0
+                .any(|next| check == *next)
             {
                 return false;
             }
@@ -42,9 +40,7 @@ fn number_sort(right_map: &MultiMap<i32, i32>, numbers: &mut Vec<i32>) -> i32{
             .get_vec(a)
             .unwrap_or(&Vec::<i32>::new())
             .into_iter()
-            .filter(|next| *b == **next)
-            .count()
-            > 0
+            .any(|next| *b == *next)
         {
             return std::cmp::Ordering::Less;
         }
