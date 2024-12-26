@@ -3,6 +3,9 @@ mod data;
 use data::INPUT as print;
 use multimap::MultiMap;
 use regex::Regex;
+use std::num::ParseIntError;
+
+// TODO: Learn if all the "unwraps here are really necessary. It feels like the way null propagates in Optionals in Java should be possible here as well?!
 
 // Map with right-rule-values as keys.
 fn map_right_values(rules: &Vec<(i32, i32)>) -> MultiMap<i32, i32> {
@@ -34,7 +37,8 @@ fn number_check(right_map: &MultiMap<i32, i32>, numbers: &Vec<i32>) -> bool {
     return true;
 }
 
-fn number_sort(right_map: &MultiMap<i32, i32>, numbers: &mut Vec<i32>) -> i32{
+fn number_sort(right_map: &MultiMap<i32, i32>, numbers: &mut Vec<i32>) -> i32 {
+    // Be aware that we get reverse order here - from what is expected from the example - but we anyway only care about the "middle value".
     numbers.sort_by(|a, b| {
         if right_map
             .get_vec(a)
@@ -46,26 +50,24 @@ fn number_sort(right_map: &MultiMap<i32, i32>, numbers: &mut Vec<i32>) -> i32{
         }
         return std::cmp::Ordering::Equal;
     });
-    
-    return numbers[numbers.len()/2];
+
+    dbg!(&numbers);
+
+    return numbers[numbers.len() / 2];
 }
 
-fn main() {
+fn main() -> Result<(), ParseIntError> {
     let rule_expression = Regex::new(r"(\d+)\|(\d+)").unwrap();
 
     let parts = print.split("\n\n").collect::<Vec<_>>();
 
-    let rules = parts[0]
-        .lines()
-        .map(|line| rule_expression.captures(line).unwrap())
-        .map(|captures| (captures.get(1).unwrap(), captures.get(2).unwrap()))
-        .map(|(a, b)| {
-            (
-                a.as_str().parse::<i32>().unwrap_or(-1),
-                b.as_str().parse::<i32>().unwrap_or(-1),
-            )
-        })
-        .collect::<Vec<_>>();
+    let mut rules: Vec<(i32, i32)> = vec![];
+    for (_, [left, right]) in rule_expression
+        .captures_iter(parts[0])
+        .map(|captures| captures.extract())
+    {
+        rules.push((left.parse()?, right.parse()?));
+    }
 
     let right_map = map_right_values(&rules);
 
@@ -78,7 +80,7 @@ fn main() {
     for line in lines {
         let numbers = line
             .split(',')
-            .map(|element| element.parse::<i32>().unwrap_or(-1))
+            .filter_map(|element| element.parse::<i32>().ok())
             .collect::<Vec<_>>();
 
         if !number_check(&right_map, &numbers) {
@@ -94,4 +96,6 @@ fn main() {
     }
 
     println!("{}", sum);
+
+    Ok(())
 }
